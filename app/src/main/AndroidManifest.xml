@@ -19,8 +19,13 @@
         <service
             android:name=".ImagesService"
             android:enabled="true"
-            android:exported="true">
+            android:exported="true"
+            android:process="com.proc2">
         </service>
+
+        <provider
+            android:authorities="ua.meugen.android.homework4"
+            android:name=".AssetsProvider"/>
     </application>
 
 </manifest>

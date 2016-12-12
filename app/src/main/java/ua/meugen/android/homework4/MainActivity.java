@@ -17,6 +17,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -61,8 +62,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onStart() {
         super.onStart();
 
+        final Intent intent = new Intent(this, ImagesService.class);
+        startService(intent);
         connection = new ServiceConnectionImpl();
-        bindService(new Intent(this, ImagesService.class), connection, BIND_AUTO_CREATE);
+        bindService(intent, connection, BIND_AUTO_CREATE);
     }
 
     @Override
@@ -71,6 +74,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         unbindService(connection);
         connection = null;
+
+        imageView.setImageBitmap(null);
+        if (this.bitmap != null) {
+            this.bitmap.recycle();
+        }
     }
 
     @Override
@@ -108,16 +116,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         InputStream input = null;
         try {
             input = getContentResolver().openInputStream(uri);
+
+            imageView.setImageBitmap(null);
+            if (bitmap != null) {
+                bitmap.recycle();
+            }
+            bitmap = BitmapFactory.decodeStream(input);
+            imageView.setImageBitmap(bitmap);
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
+        } finally {
+            if (input != null) {
+                try {
+                    input.close();
+                } catch (IOException e) {}
+            }
         }
-
-        imageView.setImageBitmap(null);
-        if (bitmap != null) {
-            bitmap.recycle();
-        }
-        bitmap = BitmapFactory.decodeStream(input);
-        imageView.setImageBitmap(bitmap);
 
         final boolean playing = data.getBoolean(ImagesService.PLAYING_KEY);
         if (playing) {
