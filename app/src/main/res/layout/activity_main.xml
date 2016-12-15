@@ -16,7 +16,8 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:weightSum="3.0">
+        android:weightSum="3.0"
+        android:id="@+id/navigation_bar">
 
         <ImageButton
             android:layout_width="0dp"
@@ -43,5 +44,11 @@
             android:id="@+id/next"/>
 
     </LinearLayout>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/start"
+        android:text="start"/>
 
 </LinearLayout>

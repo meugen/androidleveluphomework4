@@ -12,7 +12,9 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.os.ResultReceiver;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 
@@ -22,7 +24,8 @@ import java.io.InputStream;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private final ResultReceiver receiver = new ResultReceiver(new Handler()) {
+    private final Handler handler = new Handler();
+    private final ResultReceiver receiver = new ResultReceiver(handler) {
 
         @Override
         protected void onReceiveResult(final int resultCode, final Bundle resultData) {
@@ -30,10 +33,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     };
 
+    private View navigationBar;
     private ImageView imageView;
     private ImageButton nextButton;
     private ImageButton playOrPauseButton;
     private ImageButton prevButton;
+    private Button startButton;
     private ServiceConnectionImpl connection;
 
     private Bitmap bitmap;
@@ -56,24 +61,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         this.playOrPauseButton = (ImageButton) findViewById(R.id.play_pause);
         this.playOrPauseButton.setOnClickListener(this);
         this.playOrPauseButton.setEnabled(false);
+
+        this.startButton = (Button) findViewById(R.id.start);
+        this.startButton.setOnClickListener(this);
+        this.navigationBar = findViewById(R.id.navigation_bar);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
+        connectToService();
+    }
+
+    private void setVisibilities(final int navigationVisibility, final int startVisibility) {
+        this.navigationBar.setVisibility(navigationVisibility);
+        this.startButton.setVisibility(startVisibility);
+    }
+
+    private void connectToService() {
+        setVisibilities(View.GONE, View.GONE);
 
         final Intent intent = new Intent(this, ImagesService.class);
         startService(intent);
         connection = new ServiceConnectionImpl();
-        bindService(intent, connection, BIND_AUTO_CREATE);
+        bindService(intent, connection, 0);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
 
-        unbindService(connection);
-        connection = null;
+        if (connection != null) {
+            unbindService(connection);
+            connection = null;
+        }
 
         imageView.setImageBitmap(null);
         if (this.bitmap != null) {
@@ -90,25 +111,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             playOrPause();
         } else if (viewId == R.id.next) {
             next();
+        } else if (viewId == R.id.start) {
+            connectToService();
         }
     }
 
     private void prev() {
-        if (connection != null) {
-            connection.prev();
-        }
+        connection.prev();
     }
 
     private void playOrPause() {
-        if (connection != null) {
-            connection.playOrPause();
-        }
+        connection.playOrPause();
     }
 
     private void next() {
-        if (connection != null) {
-            connection.next();
-        }
+        connection.next();
     }
 
     private void onResultReceived(final Bundle data) {
@@ -159,10 +176,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
+            setVisibilities(View.VISIBLE, View.GONE);
         }
 
         @Override
         public void onServiceDisconnected(final ComponentName componentName) {
+            setVisibilities(View.GONE, View.VISIBLE);
+
             this.service = null;
             connection = null;
         }

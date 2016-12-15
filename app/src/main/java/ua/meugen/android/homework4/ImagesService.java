@@ -4,6 +4,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.os.ResultReceiver;
@@ -59,13 +60,6 @@ public class ImagesService extends Service {
             return;
         }
 
-        try {
-            final InputStream stream = getAssets().open(IMAGES[activeImage]);
-            Log.i(getClass().getName(), "" + stream);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
         final Bundle bundle = new Bundle();
         bundle.putParcelable(IMAGE_KEY, Uri.parse("content://ua.meugen.android.homework4/" + IMAGES[activeImage]));
         bundle.putBoolean(PLAYING_KEY, playing);
@@ -85,6 +79,17 @@ public class ImagesService extends Service {
             timer.schedule(new NextTask(), PERIOD, PERIOD);
         }
         sendToReceiver();
+    }
+
+    @Override
+    public void onDestroy() {
+        if (timer != null) {
+            timer.cancel();
+            timer = null;
+        }
+
+        Log.i(getClass().getName(), "onDestroy()");
+        super.onDestroy();
     }
 
     private class Binder extends IImagesService.Stub {

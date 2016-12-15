@@ -19,8 +19,7 @@
         <service
             android:name=".ImagesService"
             android:enabled="true"
-            android:exported="true"
-            android:process="com.proc2">
+            android:exported="true">
         </service>
 
         <provider
