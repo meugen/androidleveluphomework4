@@ -18,6 +18,8 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 
+import com.bumptech.glide.Glide;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,8 +42,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ImageButton prevButton;
     private Button startButton;
     private ServiceConnectionImpl connection;
-
-    private Bitmap bitmap;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -95,11 +95,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             unbindService(connection);
             connection = null;
         }
-
-        imageView.setImageBitmap(null);
-        if (this.bitmap != null) {
-            this.bitmap.recycle();
-        }
     }
 
     @Override
@@ -130,38 +125,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void onResultReceived(final Bundle data) {
         final Uri uri = data.getParcelable(ImagesService.IMAGE_KEY);
-        InputStream input = null;
-        try {
-            input = getContentResolver().openInputStream(uri);
-
-            imageView.setImageBitmap(null);
-            if (bitmap != null) {
-                bitmap.recycle();
-            }
-            bitmap = BitmapFactory.decodeStream(input);
-            imageView.setImageBitmap(bitmap);
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        } finally {
-            if (input != null) {
-                try {
-                    input.close();
-                } catch (IOException e) {}
-            }
-        }
+        Glide.with(this).load(uri).into(imageView);
 
         final boolean playing = data.getBoolean(ImagesService.PLAYING_KEY);
-        if (playing) {
-            nextButton.setEnabled(false);
-            prevButton.setEnabled(false);
-            playOrPauseButton.setEnabled(true);
-            playOrPauseButton.setImageResource(R.drawable.ic_pause_black_24dp);
-        } else {
-            nextButton.setEnabled(true);
-            prevButton.setEnabled(true);
-            playOrPauseButton.setEnabled(true);
-            playOrPauseButton.setImageResource(R.drawable.ic_play_arrow_black_24dp);
-        }
+        nextButton.setEnabled(!playing);
+        prevButton.setEnabled(!playing);
+        playOrPauseButton.setEnabled(true);
+        playOrPauseButton.setSelected(playing);
     }
 
     private class ServiceConnectionImpl implements ServiceConnection {

@@ -32,7 +32,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1.0"
             android:scaleType="centerInside"
-            android:src="@drawable/ic_play_arrow_black_24dp"
+            android:src="@drawable/ic_play_pause_selectable"
             android:id="@+id/play_pause"/>
 
         <ImageButton
